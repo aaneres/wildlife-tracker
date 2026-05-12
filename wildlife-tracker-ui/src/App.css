@@ -224,3 +224,46 @@ border: 1px solid #ccc;
 border-radius: 4px;
 font-family: inherit;
 }
+
+.log-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px; 
+  width: 350px;
+  max-height: 80vh;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.log-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 5px;
+}
+
+.log-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.log-card strong {
+  color: #007bff;
+  font-size: 1.1em;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
