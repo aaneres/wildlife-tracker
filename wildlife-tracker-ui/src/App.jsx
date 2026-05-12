@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
+import HeatmapLayer from './HeatmapLayer';
 
 const getLocalISOTime = () => {
   const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
@@ -21,16 +22,14 @@ function App() {
   const [sightings, setSightings] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   
-  // Form State
   const [species, setSpecies] = useState('Coyote');
   const [customSpecies, setCustomSpecies] = useState('');
   const [count, setCount] = useState(1);
   const [notes, setNotes] = useState('');
   const [timestamp, setTimestamp] = useState(getLocalISOTime());
-
-  // NEW: Log Panel State
   const [showLog, setShowLog] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState('All');
+  const [mapView, setMapView] = useState('pins');
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/sightings/')
@@ -83,26 +82,35 @@ function App() {
 
   return (
     <div style={{ height: '100vh', width: '100%' }}>
-      <button 
-        onClick={() => setShowLog(!showLog)}
-        style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000, padding: '10px 15px', background: '#333', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-      >
-        {showLog ? 'Hide Data Log' : 'View Data Log'}
-      </button>
+      
+      {/* --- 1. TOP LEFT ZONE: Controls & Filter --- */}
+      <div className="top-left-controls">
+        <button 
+          onClick={() => setShowLog(!showLog)}
+          style={{ padding: '10px 15px', background: '#333', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          {showLog ? 'Hide Data Log' : 'View Data Log'}
+        </button>
 
+        <div className="filter-box">
+          <label>Filter Map Data</label>
+          <select 
+            value={filterSpecies} 
+            onChange={(e) => setFilterSpecies(e.target.value)}
+            style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', fontWeight: 'bold' }}
+          >
+            {uniqueSpeciesList.map((animal) => (
+              <option key={animal} value={animal}>{animal}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* --- 2. THE DATA LOG PANEL --- */}
       {showLog && (
         <div className="log-panel">
           <div className="header-row">
             <h2 style={{ margin: 0 }}>Sighting History</h2>
-          </div>
-
-          <div className="form-group">
-            <label>Filter by Species:</label>
-            <select value={filterSpecies} onChange={(e) => setFilterSpecies(e.target.value)}>
-              {uniqueSpeciesList.map((animal) => (
-                <option key={animal} value={animal}>{animal}</option>
-              ))}
-            </select>
           </div>
 
           <div className="log-list">
@@ -123,6 +131,27 @@ function App() {
         </div>
       )}
 
+      {/* --- 3. BOTTOM CENTER ZONE: Map Toggle --- */}
+      <div className="bottom-center-controls">
+        <button 
+          onClick={() => setMapView(mapView === 'pins' ? 'heatmap' : 'pins')}
+          style={{ 
+            padding: '12px 24px', 
+            background: mapView === 'heatmap' ? '#ff4b4b' : '#007bff', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '30px',
+            cursor: 'pointer', 
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+            fontSize: '1.1rem'
+          }}
+        >
+          {mapView === 'pins' ? '🔥 Switch to Heatmap' : '📍 Switch to Pins'}
+        </button>
+      </div>
+
+      {/* --- 4. THE ENTRY FORM (Appears on click) --- */}
       {selectedLocation && (
         <div className="ui-overlay">
           <h2>Log Sighting</h2>
@@ -196,19 +225,21 @@ function App() {
         </div>
       )}
 
+      {/* Prompt text when no location is selected */}
       {!selectedLocation && !showLog && (
-        <div className="ui-overlay" style={{ pointerEvents: 'none', background: 'rgba(255, 255, 255, 0.85)', textAlign: 'center' }}>
+        <div className="ui-overlay" style={{ pointerEvents: 'none', background: 'rgba(255, 255, 255, 0.85)', textAlign: 'center', top: '20px', left: '50%', transform: 'translateX(-50%)' }}>
            <h3 style={{ margin: 0, color: '#333' }}>Tap anywhere on the map to log a sighting</h3>
         </div>
       )}
 
+      {/* --- 5. THE MAP --- */}
       <MapContainer center={[49.2606, -123.2460]} zoom={15} style={{ height: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap'
         />
         
-        {sortedSightings.map((s, idx) => (
+        {mapView === 'pins' && sortedSightings.map((s, idx) => (
           <Marker key={idx} position={[s.latitude, s.longitude]}>
             <Popup>
               <strong>{s.count}x {s.species}</strong> <br />
@@ -217,6 +248,10 @@ function App() {
             </Popup>
           </Marker>
         ))}
+
+        {mapView === 'heatmap' && (
+           <HeatmapLayer sightings={sortedSightings} />
+        )}
 
         <LocationMarker onMapClick={(lat, lng) => setSelectedLocation({ lat, lng })} />
 
