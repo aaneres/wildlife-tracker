@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Local Wildlife Tracker</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        .ui-panel {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui-panel">
+        <h3>Log a Sighting</h3>
+        <p>Click anywhere on the map to log a location.</p>
+        <input type="text" id="animalName" placeholder="e.g., Moo Fam" value="Moolet">
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Vancouver
+        const map = L.map('map').setView([49.2827, -123.1207], 13);
+
+        // Load the map tiles (the actual map images)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Listen for map clicks
+        map.on('click', async function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            const name = document.getElementById('animalName').value;
+
+            // Drop a pin immediately
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${name}</b> spotted here!`)
+                .openPopup();
+
+            // Send data to our FastAPI backend
+            const payload = {
+                species_or_name: name,
+                latitude: lat,
+                longitude: lng,
+                notes: "Morning feeding"
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/sightings/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                console.log(result);
+            } catch (error) {
+                console.error("Make sure your FastAPI server is running!", error);
+            }
+        });
+    </script>
+</body>
+</html>

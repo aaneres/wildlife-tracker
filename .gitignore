@@ -1,0 +1,12 @@
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+venv/
+env/
+*.db
+
+# Mac system files
+.DS_Store
