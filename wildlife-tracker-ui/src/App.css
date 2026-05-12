@@ -186,17 +186,41 @@
 .ui-overlay {
     position: absolute;
     top: 20px;
-    left: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* This perfectly centers the box */
+    width: 320px; /* Fixed width so it doesn't stretch */
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    
+    /* Flexbox makes stacking the form fields easy */
+    display: flex;
+    flex-direction: column;
+    gap: 12px; 
+}
   
-  input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-  }
+.ui-overlay h2 {
+margin: 0 0 5px 0;
+text-align: center;
+}
+
+.form-group {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.form-group label {
+font-size: 0.85rem;
+font-weight: bold;
+color: #333;
+}
+
+input, select, textarea {
+padding: 8px;
+border: 1px solid #ccc;
+border-radius: 4px;
+font-family: inherit;
+}
