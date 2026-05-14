@@ -30,6 +30,7 @@ function App() {
   const [showLog, setShowLog] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState('All');
   const [mapView, setMapView] = useState('pins');
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/sightings/')
@@ -41,29 +42,35 @@ function App() {
   const handleSubmit = async () => {
     const finalSpecies = species === 'Other' ? customSpecies : species;
 
-    const newSighting = {
-      species: finalSpecies,
-      count: parseInt(count, 10),
-      notes: notes,
-      timestamp: timestamp, 
-      latitude: selectedLocation.lat,
-      longitude: selectedLocation.lng
-    };
+    const formData = new FormData();
+    formData.append('species', finalSpecies);
+    formData.append('count', count);
+    formData.append('notes', notes);
+    formData.append('timestamp', timestamp);
+    formData.append('latitude', selectedLocation.lat);
+    formData.append('longitude', selectedLocation.lng);
+    
+    if (image) {
+      formData.append('image', image);
+    }
 
     try {
       const response = await fetch('http://127.0.0.1:8000/api/sightings/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSighting),
+        body: formData,
       });
       
       if (response.ok) {
-        setSightings([...sightings, newSighting]);
+        const refreshRes = await fetch('http://127.0.0.1:8000/api/sightings/');
+        const freshData = await refreshRes.json();
+        setSightings(freshData);
+
         setSelectedLocation(null);
         setSpecies('Coyote');
         setCustomSpecies('');
         setCount(1);
         setNotes('');
+        setImage(null); 
         setTimestamp(getLocalISOTime());
       }
     } catch (error) {
@@ -82,8 +89,7 @@ function App() {
 
   return (
     <div style={{ height: '100vh', width: '100%' }}>
-      
-      {/* --- 1. TOP LEFT ZONE: Controls & Filter --- */}
+
       <div className="top-left-controls">
         <button 
           onClick={() => setShowLog(!showLog)}
@@ -106,7 +112,6 @@ function App() {
         </div>
       </div>
 
-      {/* --- 2. THE DATA LOG PANEL --- */}
       {showLog && (
         <div className="log-panel">
           <div className="header-row">
@@ -131,7 +136,6 @@ function App() {
         </div>
       )}
 
-      {/* --- 3. BOTTOM CENTER ZONE: Map Toggle --- */}
       <div className="bottom-center-controls">
         <button 
           onClick={() => setMapView(mapView === 'pins' ? 'heatmap' : 'pins')}
@@ -151,7 +155,6 @@ function App() {
         </button>
       </div>
 
-      {/* --- 4. THE ENTRY FORM (Appears on click) --- */}
       {selectedLocation && (
         <div className="ui-overlay">
           <h2>Log Sighting</h2>
@@ -199,6 +202,16 @@ function App() {
           </div>
 
           <div className="form-group">
+            <label>Attach Photo (Optional)</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => setImage(e.target.files[0])}
+              style={{ fontSize: '0.85rem' }}
+            />
+          </div>
+
+          <div className="form-group">
             <label>Notes</label>
             <textarea 
               rows="2" 
@@ -225,14 +238,12 @@ function App() {
         </div>
       )}
 
-      {/* Prompt text when no location is selected */}
       {!selectedLocation && !showLog && (
         <div className="ui-overlay" style={{ pointerEvents: 'none', background: 'rgba(255, 255, 255, 0.85)', textAlign: 'center', top: '20px', left: '50%', transform: 'translateX(-50%)' }}>
            <h3 style={{ margin: 0, color: '#333' }}>Tap anywhere on the map to log a sighting</h3>
         </div>
       )}
 
-      {/* --- 5. THE MAP --- */}
       <MapContainer center={[49.2606, -123.2460]} zoom={15} style={{ height: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -242,9 +253,16 @@ function App() {
         {mapView === 'pins' && sortedSightings.map((s, idx) => (
           <Marker key={idx} position={[s.latitude, s.longitude]}>
             <Popup>
-              <strong>{s.count}x {s.species}</strong> <br />
-              {s.notes && <span><em>"{s.notes}"</em><br /></span>}
-              <small>{new Date(s.timestamp).toLocaleString()}</small>
+                <strong>{s.count}x {s.species}</strong> <br />
+                {s.notes && <span><em>"{s.notes}"</em><br /></span>}
+                <small>{new Date(s.timestamp).toLocaleString()}</small>
+                {s.image_path && (
+                    <img 
+                    src={s.image_path} 
+                    alt="Wildlife Sighting" 
+                    style={{ width: '100%', borderRadius: '6px', marginTop: '10px' }} 
+                    />
+                )}
             </Popup>
           </Marker>
         ))}
