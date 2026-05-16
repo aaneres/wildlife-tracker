@@ -114,8 +114,12 @@ function App() {
 
       {showLog && (
         <div className="log-panel">
-          <div className="header-row">
+          <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0 }}>Sighting History</h2>
+
+            <span style={{ background: '#007bff', color: 'white', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem' }}>
+              Total: {sortedSightings.reduce((sum, current) => sum + current.count, 0)}
+            </span>
           </div>
 
           <div className="log-list">
@@ -123,12 +127,27 @@ function App() {
               <p>No sightings found.</p>
             ) : (
               sortedSightings.map((s, idx) => (
-                <div key={idx} className="log-card">
-                  <strong>{s.count}x {s.species}</strong>
+                <div key={idx} className="log-card" style={{ textAlign: 'center' }}>
+                  <strong style={{ color: '#007bff', fontSize: '1.2rem' }}>{s.count}x {s.species}</strong>
                   <div style={{ color: '#666', fontSize: '0.85em', margin: '4px 0' }}>
                     {new Date(s.timestamp).toLocaleString()}
                   </div>
-                  {s.notes && <div><em>"{s.notes}"</em></div>}
+                  {s.notes && <div style={{ marginBottom: '8px', color: '#444' }}><em>"{s.notes}"</em></div>}
+                  
+                  {s.image_path && (
+                    <img 
+                      src={s.image_path} 
+                      alt="Wildlife Sighting" 
+                      style={{ 
+                        width: '100%', 
+                        height: '150px', 
+                        objectFit: 'cover', 
+                        borderRadius: '6px',
+                        marginTop: '8px',
+                        border: '1px solid #eee'
+                      }} 
+                    />
+                  )}
                 </div>
               ))
             )}
@@ -258,11 +277,17 @@ function App() {
                 <small>{new Date(s.timestamp).toLocaleString()}</small>
                 {s.image_path && (
                     <img 
-                    src={s.image_path} 
-                    alt="Wildlife Sighting" 
-                    style={{ width: '100%', borderRadius: '6px', marginTop: '10px' }} 
+                      src={s.image_path} 
+                      alt="Wildlife Sighting" 
+                      style={{ 
+                        width: '100%', 
+                        maxHeight: '200px', 
+                        borderRadius: '6px', 
+                        marginTop: '10px', 
+                        objectFit: 'cover' 
+                      }} 
                     />
-                )}
+                  )}
             </Popup>
           </Marker>
         ))}
