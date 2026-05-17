@@ -140,11 +140,12 @@ function App() {
                       alt="Wildlife Sighting" 
                       style={{ 
                         width: '100%', 
-                        height: '150px', 
-                        objectFit: 'cover', 
+                        height: 'auto',
+                        maxHeight: '250px', 
+                        objectFit: 'contain', 
                         borderRadius: '6px',
                         marginTop: '8px',
-                        border: '1px solid #eee'
+                        backgroundColor: '#f1f1f1'
                       }} 
                     />
                   )}
